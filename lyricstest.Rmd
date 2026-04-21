@@ -1,0 +1,90 @@
+---
+title: "testlyrics"
+author: "Jack Schloesser"
+date: "2026-04-21"
+output: html_document
+---
+
+```{r}
+install.packages(c("rvest", "httr", "dplyr", "stringr"))
+install.packages("rlang")
+```
+
+```{r}
+library(rvest)
+library(httr)
+library(dplyr)
+library(stringr)
+```
+
+```{r}
+song_urls <- c(
+  "https://genius.com/Olivia-rodrigo-drop-dead-lyrics",
+  "https://genius.com/Katseye-pinky-up-lyrics",
+  "https://genius.com/Kendrick-lamar-and-sza-luther-lyrics",
+  "https://genius.com/Rose-and-bruno-mars-apt-lyrics",
+  "https://genius.com/Lady-gaga-and-bruno-mars-die-with-a-smile-lyrics"
+)
+
+get_lyrics <- function(url) {
+  tryCatch({
+    page <- rvest::read_html(url)
+    
+    lyrics_nodes <- rvest::html_elements(page, "[data-lyrics-container='true']")
+    
+    lyrics <- lyrics_nodes %>%
+      rvest::html_text() %>%
+      paste(collapse = "\n")
+    
+    lyrics <- lyrics %>%
+      stringr::str_remove_all("\\[.*?\\]") %>%              # remove [Verse], etc.
+      stringr::str_remove_all("(?i)translations.*") %>%     # remove translations
+      stringr::str_remove_all("(?i)contributors.*") %>%     # remove contributors text
+      stringr::str_remove_all("^\\d+\\s+") %>%              # remove leading number
+      stringr::str_replace_all("([a-z])([A-Z])", "\\1 \\2") %>% #inserts space where sometimes words combine
+      stringr::str_replace_all("([0-9])([A-Za-z])", "\\1 \\2") %>% #same as above except for numbers after words
+      stringr::str_replace_all("([A-Za-z])([0-9])", "\\1 \\2") %>% # vice-versa as above
+      
+      stringr::str_squish() #cleans whitespacae
+    
+    return(lyrics)
+    
+  }, error = function(e) {
+    return(NA)
+  })
+}
+
+lyrics_df <- data.frame(
+  url = song_urls,
+  lyrics = sapply(song_urls, get_lyrics),
+  stringsAsFactors = FALSE
+)
+
+lyrics_to_words <- function(song_name, lyrics_text) {
+  
+  words <- lyrics_text %>%
+    stringr::str_to_lower() %>%
+    stringr::str_replace_all("[^a-z0-9\\s']", " ") %>%  # remove punctuation
+    stringr::str_squish() %>%
+    stringr::str_split("\\s+") %>%
+    unlist()
+  
+  data.frame(
+    song = song_name,
+    word = words,
+    stringsAsFactors = FALSE
+  )
+}
+
+word_df <- do.call(
+  rbind,
+  lapply(seq_len(nrow(lyrics_df)), function(i) {
+    lyrics_to_words(
+      song_name = lyrics_df$url[i],
+      lyrics_text = lyrics_df$lyrics[i]
+    )
+  })
+)
+
+print(word_df)
+```
