@@ -1,0 +1,423 @@
+---
+title: "Lyrics data quality, matching, and repetition analysis"
+author: ""
+date: ""
+output: html_document
+---
+
+## Setup
+
+```{r install-packages, eval=FALSE}
+install.packages(c("rvest", "httr", "dplyr", "stringr", "tidyr", "tibble", "ggplot2", "forcats"))
+```
+
+```{r setup, message=FALSE, warning=FALSE}
+library(rvest)
+library(httr)
+library(dplyr)
+library(stringr)
+library(tidyr)
+library(tibble)
+library(ggplot2)
+library(forcats)
+```
+
+## 1. Song URLs and matching table
+
+This table is used to match each scraped URL to a readable song title and artist name.
+
+```{r song-metadata}
+song_urls <- c(
+  "https://genius.com/Olivia-rodrigo-drop-dead-lyrics",
+  "https://genius.com/Katseye-pinky-up-lyrics",
+  "https://genius.com/Kendrick-lamar-and-sza-luther-lyrics",
+  "https://genius.com/Rose-and-bruno-mars-apt-lyrics",
+  "https://genius.com/Lady-gaga-and-bruno-mars-die-with-a-smile-lyrics"
+)
+
+song_meta <- tibble(
+  url = song_urls,
+  artist = c(
+    "Olivia Rodrigo",
+    "KATSEYE",
+    "Kendrick Lamar and SZA",
+    "ROSÉ and Bruno Mars",
+    "Lady Gaga and Bruno Mars"
+  ),
+  song = c(
+    "Drop Dead",
+    "Pinky Up",
+    "Luther",
+    "APT.",
+    "Die With A Smile"
+  )
+)
+
+song_meta
+```
+
+## 2. Scraping lyrics
+
+```{r scrape-lyrics}
+get_lyrics <- function(url) {
+  tryCatch({
+    response <- httr::GET(
+      url,
+      httr::user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+    )
+    
+    if (httr::status_code(response) >= 400) {
+      return(NA_character_)
+    }
+    
+    page <- httr::content(response, as = "text", encoding = "UTF-8") |>
+      rvest::read_html()
+    
+    lyrics_nodes <- rvest::html_elements(
+      page,
+      "[data-lyrics-container='true'], div[class*='Lyrics__Container']"
+    )
+    
+    if (length(lyrics_nodes) == 0) {
+      return(NA_character_)
+    }
+    
+    lyrics <- lyrics_nodes |>
+      rvest::html_text2() |>
+      paste(collapse = "\n")
+    
+    lyrics <- lyrics |>
+      stringr::str_remove_all("\\[.*?\\]") |>
+      stringr::str_remove_all("(?i)translations.*") |>
+      stringr::str_remove_all("(?i)contributors.*") |>
+      stringr::str_replace_all("([a-z])([A-Z])", "\\1 \\2") |>
+      stringr::str_replace_all("([0-9])([A-Za-z])", "\\1 \\2") |>
+      stringr::str_replace_all("([A-Za-z])([0-9])", "\\1 \\2") |>
+      stringr::str_replace_all("[ \t]+", " ") |>
+      stringr::str_replace_all(" *\n+ *", "\n") |>
+      stringr::str_trim()
+    
+    if (stringr::str_squish(lyrics) == "") {
+      return(NA_character_)
+    }
+    
+    lyrics
+  }, error = function(e) {
+    NA_character_
+  })
+}
+
+lyrics_df <- tibble(
+  url = song_urls,
+  lyrics = sapply(song_urls, get_lyrics, USE.NAMES = FALSE)
+) |>
+  left_join(song_meta, by = "url") |>
+  relocate(song, artist, url, lyrics)
+
+lyrics_df
+```
+
+## 3. Data quality and matching checks
+
+```{r data-quality-checks}
+lyrics_quality <- lyrics_df |>
+  mutate(
+    lyrics_clean = replace_na(lyrics, ""),
+    matched_song_info = !is.na(song) & !is.na(artist),
+    missing_lyrics = stringr::str_squish(lyrics_clean) == "",
+    character_count = nchar(lyrics_clean),
+    word_count = if_else(missing_lyrics, 0L, stringr::str_count(lyrics_clean, "\\S+")),
+    line_count = if_else(missing_lyrics, 0L, stringr::str_count(lyrics_clean, "\n") + 1L),
+    very_short_lyrics = word_count < 50,
+    duplicate_url = duplicated(url) | duplicated(url, fromLast = TRUE),
+    duplicate_lyrics = duplicated(lyrics_clean) | duplicated(lyrics_clean, fromLast = TRUE)
+  ) |>
+  select(
+    song, artist, matched_song_info, missing_lyrics, very_short_lyrics,
+    duplicate_url, duplicate_lyrics, word_count, line_count, character_count, url
+  )
+
+lyrics_quality
+```
+
+```{r problem-rows}
+problem_rows <- lyrics_quality |>
+  filter(
+    !matched_song_info |
+      missing_lyrics |
+      very_short_lyrics |
+      duplicate_url |
+      duplicate_lyrics
+  )
+
+problem_rows
+```
+
+```{r quality-summary-graph}
+quality_summary <- lyrics_quality |>
+  summarise(
+    unmatched_song_info = sum(!matched_song_info),
+    missing_lyrics = sum(missing_lyrics),
+    very_short_lyrics = sum(very_short_lyrics),
+    duplicate_urls = sum(duplicate_url),
+    duplicate_lyrics = sum(duplicate_lyrics)
+  ) |>
+  pivot_longer(everything(), names_to = "quality_check", values_to = "count")
+
+ggplot(quality_summary, aes(x = fct_reorder(quality_check, count), y = count)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Data quality checks for scraped lyric data",
+    x = "Quality check",
+    y = "Number of affected rows"
+  )
+```
+# fix this error with an empty graph
+
+## 4. Convert lyrics into individual words
+
+```{r lyrics-to-words}
+lyrics_to_words <- function(song_name, lyrics_text) {
+  if (is.na(lyrics_text) || stringr::str_squish(lyrics_text) == "") {
+    return(tibble(song = character(), word_position = integer(), word = character()))
+  }
+  
+  words <- lyrics_text |>
+    stringr::str_to_lower() |>
+    stringr::str_replace_all("[^a-z0-9\\s']", " ") |>
+    stringr::str_squish() |>
+    stringr::str_split("\\s+") |>
+    unlist()
+  
+  words <- words[!is.na(words) & words != ""]
+  
+  tibble(
+    song = song_name,
+    word_position = seq_along(words),
+    word = words
+  )
+}
+
+word_df <- bind_rows(
+  lapply(seq_len(nrow(lyrics_df)), function(i) {
+    lyrics_to_words(
+      song_name = lyrics_df$song[i],
+      lyrics_text = lyrics_df$lyrics[i]
+    )
+  })
+)
+
+word_df
+```
+
+```{r word-data-warning}
+if (nrow(word_df) == 0) {
+  message("No word data was created. This usually means the lyric scraping did not work. Check lyrics_quality: if missing_lyrics is TRUE, Genius did not return usable lyric text.")
+}
+```
+
+## 5. Find repetitiveness by words
+
+A more repetitive song will usually have a lower proportion of unique words. The repetition score is higher when a song repeats more vocabulary.
+
+```{r word-repetition-score}
+if (nrow(word_df) == 0) {
+  word_repetition <- tibble(
+    song = character(),
+    total_words = integer(),
+    unique_words = integer(),
+    repeated_words = integer(),
+    unique_word_ratio = numeric(),
+    repetition_score = numeric()
+  )
+} else {
+  word_repetition <- word_df |>
+    group_by(song) |>
+    summarise(
+      total_words = n(),
+      unique_words = n_distinct(word),
+      repeated_words = total_words - unique_words,
+      unique_word_ratio = unique_words / total_words,
+      repetition_score = 1 - unique_word_ratio,
+      .groups = "drop"
+    ) |>
+    arrange(desc(repetition_score))
+}
+
+word_repetition
+```
+
+```{r repetition-score-graph}
+if (nrow(word_repetition) == 0) {
+  message("No repetition score graph created because there is no word data.")
+} else {
+  ggplot(word_repetition, aes(x = fct_reorder(song, repetition_score), y = repetition_score)) +
+    geom_col() +
+    coord_flip() +
+    labs(
+      title = "Overall word repetitiveness by song",
+      subtitle = "Higher values mean more repeated vocabulary",
+      x = "Song",
+      y = "Repetition score"
+    )
+}
+```
+
+```{r most-repeated-words}
+if (nrow(word_df) == 0) {
+  repeated_words <- tibble(song = character(), word = character(), times_used = integer())
+} else {
+  repeated_words <- word_df |>
+    count(song, word, name = "times_used") |>
+    filter(times_used > 1) |>
+    group_by(song) |>
+    slice_max(times_used, n = 10, with_ties = FALSE) |>
+    ungroup() |>
+    arrange(song, desc(times_used))
+}
+
+repeated_words
+```
+
+```{r repeated-words-graph}
+if (nrow(repeated_words) == 0) {
+  message("No repeated words graph created because repeated_words has zero rows. This usually means the lyrics were not scraped successfully.")
+} else {
+  ggplot(repeated_words, aes(x = fct_reorder(word, times_used), y = times_used)) +
+    geom_col() +
+    coord_flip() +
+    facet_wrap(~ song, scales = "free_y") +
+    labs(
+      title = "Most repeated words in each song",
+      x = "Word",
+      y = "Times used"
+    )
+}
+```
+
+## 6. Find repetitiveness by lyric lines
+
+This checks whether entire lyric lines are repeated. This is useful because songs often repeat choruses or hooks.
+
+```{r lyrics-to-lines}
+lyrics_to_lines <- function(song_name, lyrics_text) {
+  if (is.na(lyrics_text) || stringr::str_squish(lyrics_text) == "") {
+    return(tibble(song = character(), line_number = integer(), line = character()))
+  }
+  
+  lines <- lyrics_text |>
+    stringr::str_split("\n") |>
+    unlist() |>
+    stringr::str_to_lower() |>
+    stringr::str_remove_all("\\[.*?\\]") |>
+    stringr::str_replace_all("[^a-z0-9\\s']", " ") |>
+    stringr::str_squish()
+  
+  lines <- lines[!is.na(lines) & lines != ""]
+  
+  tibble(
+    song = song_name,
+    line_number = seq_along(lines),
+    line = lines
+  )
+}
+
+line_df <- bind_rows(
+  lapply(seq_len(nrow(lyrics_df)), function(i) {
+    lyrics_to_lines(
+      song_name = lyrics_df$song[i],
+      lyrics_text = lyrics_df$lyrics[i]
+    )
+  })
+)
+
+line_df
+```
+
+```{r line-repetition-score}
+if (nrow(line_df) == 0) {
+  line_repetition <- tibble(
+    song = character(),
+    total_lines = integer(),
+    unique_lines = integer(),
+    repeated_lines = integer(),
+    line_repetition_score = numeric()
+  )
+} else {
+  line_repetition <- line_df |>
+    group_by(song) |>
+    summarise(
+      total_lines = n(),
+      unique_lines = n_distinct(line),
+      repeated_lines = total_lines - unique_lines,
+      line_repetition_score = 1 - (unique_lines / total_lines),
+      .groups = "drop"
+    ) |>
+    arrange(desc(line_repetition_score))
+}
+
+line_repetition
+```
+
+```{r line-repetition-graph}
+if (nrow(line_repetition) == 0) {
+  message("No line repetition graph created because there is no lyric line data.")
+} else {
+  ggplot(line_repetition, aes(x = fct_reorder(song, line_repetition_score), y = line_repetition_score)) +
+    geom_col() +
+    coord_flip() +
+    labs(
+      title = "Repeated lyric lines by song",
+      subtitle = "Higher values mean more repeated full lines",
+      x = "Song",
+      y = "Line repetition score"
+    )
+}
+```
+
+```{r most-repeated-lines}
+if (nrow(line_df) == 0) {
+  repeated_lines <- tibble(song = character(), line = character(), times_repeated = integer())
+} else {
+  repeated_lines <- line_df |>
+    count(song, line, name = "times_repeated") |>
+    filter(times_repeated > 1) |>
+    group_by(song) |>
+    slice_max(times_repeated, n = 5, with_ties = FALSE) |>
+    ungroup() |>
+    arrange(song, desc(times_repeated))
+}
+
+repeated_lines
+```
+
+## 7. Extra graph: total words vs unique words
+
+```{r total-vs-unique-graph}
+if (nrow(word_repetition) == 0) {
+  message("No total vs unique words graph created because there is no word data.")
+} else {
+  word_counts_long <- word_repetition |>
+    select(song, total_words, unique_words) |>
+    pivot_longer(cols = c(total_words, unique_words), names_to = "measure", values_to = "count")
+  
+  ggplot(word_counts_long, aes(x = song, y = count, fill = measure)) +
+    geom_col(position = "dodge") +
+    coord_flip() +
+    labs(
+      title = "Total words compared with unique words",
+      x = "Song",
+      y = "Word count",
+      fill = "Measure"
+    )
+}
+```
+
+## Short interpretation template
+
+The data quality checks show whether the lyrics scraped successfully and whether any rows need cleaning. Rows marked as missing, very short, duplicated, or unmatched should be checked before interpreting the graphs.
+
+The word repetition graph compares how much vocabulary is repeated in each song. A higher repetition score suggests that the song relies more heavily on repeated words. The repeated words graph shows which specific words are driving this pattern.
+
+The line repetition graph is useful for identifying repeated choruses or repeated hooks. A high line repetition score means that entire lyric lines are repeated, not just individual words.
