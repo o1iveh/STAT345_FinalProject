@@ -1,0 +1,42 @@
+---
+title: "wordcloud"
+author: "Jack Schloesser"
+date: "2026-04-29"
+output: html_document
+---
+
+```{r}
+install.packages(c("wordcloud", "RColorBrewer", "dplyr"))
+install.packages("tm")
+```
+
+```{r}
+library(wordcloud)
+library(RColorBrewer)
+library(dplyr)
+library(tm)
+```
+
+```{r}
+word_counts <- word_df %>%
+  count(word, sort = TRUE)
+
+word_counts_filtered <- word_counts %>% #filters out words with less than 5 occurences
+  filter(n >= 5)
+
+word_counts_filtered <- word_counts %>% #filters out common words (the, a, etc.)
+  filter(n >= 5) %>%
+  filter(!word %in% stopwords("en"))
+
+set.seed(123)
+
+wordcloud(
+  words = word_counts_filtered$word,
+  freq = word_counts_filtered$n,
+  min.freq = 5,
+  max.words = 250,
+  random.order = FALSE,
+  rot.per = 0.35,
+  colors = brewer.pal(8, "Dark2")
+)
+```
