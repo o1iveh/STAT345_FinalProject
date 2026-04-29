@@ -18,12 +18,230 @@ library(stringr)
 ```
 
 ```{r}
-song_urls <- c(
-  "https://genius.com/Olivia-rodrigo-drop-dead-lyrics",
-  "https://genius.com/Katseye-pinky-up-lyrics",
-  "https://genius.com/Kendrick-lamar-and-sza-luther-lyrics",
-  "https://genius.com/Rose-and-bruno-mars-apt-lyrics",
-  "https://genius.com/Lady-gaga-and-bruno-mars-die-with-a-smile-lyrics"
+song_urls_2010s <- c(
+  "https://genius.com/Kendrick-lamar-alright-lyrics",
+"https://genius.com/Grimes-oblivion-lyrics",
+"https://genius.com/Robyn-dancing-on-my-own-lyrics",
+"https://genius.com/Beyonce-formation-lyrics",
+"https://genius.com/Frank-ocean-thinkin-bout-you-lyrics",
+"https://genius.com/Azealia-banks-212-lyrics",
+"https://genius.com/Mitski-your-best-american-girl-lyrics",
+"https://genius.com/Solange-cranes-in-the-sky-lyrics",
+"https://genius.com/Lana-del-rey-video-games-lyrics",
+"https://genius.com/Lil-uzi-vert-xo-tour-llif3-lyrics",
+"https://genius.com/Bill-callahan-riding-for-the-feeling-lyrics",
+"https://genius.com/Sky-ferreira-everything-is-embarrassing-lyrics",
+"https://genius.com/Chief-keef-i-dont-like-lyrics",
+"https://genius.com/Angel-olsen-shut-up-kiss-me-lyrics",
+"https://genius.com/Rihanna-work-lyrics",
+"https://genius.com/The-1975-love-it-if-we-made-it-lyrics",
+"https://genius.com/Jamie-xx-gosh-lyrics",
+"https://genius.com/Kanye-west-runaway-lyrics",
+"https://genius.com/Vampire-weekend-hannah-hunt-lyrics",
+"https://genius.com/M83-midnight-city-lyrics",
+"https://genius.com/Drake-hold-on-were-going-home-lyrics",
+"https://genius.com/Anohni-drone-bomb-me-lyrics",
+"https://genius.com/Rosalia-malamente-cap1-augurio-lyrics",
+"https://genius.com/Todd-terje-inspector-norse-lyrics",
+"https://genius.com/Fka-twigs-cellophane-lyrics",
+"https://genius.com/Bon-iver-holocene-lyrics",
+"https://genius.com/Mia-bad-girls-lyrics",
+"https://genius.com/Beyonce-countdown-lyrics",
+"https://genius.com/Joanna-newsom-good-intentions-paving-co-lyrics",
+"https://genius.com/Cardi-b-bodak-yellow-lyrics",
+"https://genius.com/Ariel-pinks-haunted-graffiti-round-and-round-lyrics",
+"https://genius.com/Fiona-apple-every-single-night-lyrics",
+"https://genius.com/Lcd-soundsystem-dance-yrself-clean-lyrics",
+"https://genius.com/Future-islands-seasons-waiting-on-you-lyrics",
+"https://genius.com/Rae-sremmurd-black-beatles-lyrics",
+"https://genius.com/Carly-rae-jepsen-run-away-with-me-lyrics",
+"https://genius.com/Jai-paul-btstu-edit-lyrics",
+"https://genius.com/Kanye-west-monster-lyrics",
+"https://genius.com/Sophie-bipp-lyrics",
+"https://genius.com/Frank-ocean-nights-lyrics",
+"https://genius.com/Courtney-barnett-avant-gardener-lyrics",
+"https://genius.com/Sza-the-weekend-lyrics",
+"https://genius.com/Lorde-the-louvre-lyrics",
+"https://genius.com/Big-thief-mary-lyrics",
+"https://genius.com/Robyn-call-your-girlfriend-lyrics",
+"https://genius.com/The-knife-full-of-fire-lyrics",
+"https://genius.com/Tame-impala-let-it-happen-lyrics",
+"https://genius.com/Ariana-grande-thank-u-next-lyrics",
+"https://genius.com/Gyptian-hold-yuh-lyrics",
+"https://genius.com/Arcade-fire-sprawl-ii-mountains-beyond-mountains-lyrics",
+"https://genius.com/Kendrick-lamar-bitch-dont-kill-my-vibe-lyrics",
+"https://genius.com/Camp-cope-the-opener-lyrics",
+"https://genius.com/Solange-losing-you-lyrics",
+"https://genius.com/Disclosure-latch-lyrics",
+"https://genius.com/Bat-for-lashes-laura-lyrics",
+"https://genius.com/Vince-staples-norf-norf-lyrics",
+"https://genius.com/Taylor-swift-all-too-well-lyrics",
+"https://genius.com/Miguel-adorn-lyrics",
+"https://genius.com/David-bowie-blackstar-lyrics",
+"https://genius.com/Future-march-madness-lyrics",
+"https://genius.com/Ema-california-lyrics",
+"https://genius.com/Rihanna-we-found-love-lyrics",
+"https://genius.com/Bobby-shmurda-hot-nigga-lyrics",
+"https://genius.com/Phoebe-bridgers-motion-sickness-lyrics",
+"https://genius.com/Drake-worst-behavior-lyrics",
+"https://genius.com/King-krule-out-getting-ribs-lyrics",
+"https://genius.com/Kacey-musgraves-slow-burn-lyrics",
+"https://genius.com/Fka-twigs-two-weeks-lyrics",
+"https://genius.com/Caribou-cant-do-without-you-lyrics",
+"https://genius.com/Beach-house-zebra-lyrics",
+"https://genius.com/Adele-someone-like-you-lyrics",
+"https://genius.com/Tyler-the-creator-yonkers-lyrics",
+"https://genius.com/Perfume-genius-queen-lyrics",
+"https://genius.com/Jack-u-where-are-u-now-lyrics",
+"https://genius.com/Dj-koze-pick-up-lyrics",
+"https://genius.com/The-national-bloodbuzz-ohio-lyrics",
+"https://genius.com/Kanye-west-ultralight-beam-lyrics",
+"https://genius.com/Jeremih-oui-lyrics",
+"https://genius.com/Lana-del-rey-the-greatest-lyrics",
+"https://genius.com/Blood-orange-youre-not-good-enough-lyrics",
+"https://genius.com/Cass-mccombs-county-line-lyrics",
+"https://genius.com/Dej-loaf-try-me-lyrics",
+"https://genius.com/Deerhunter-desire-lines-lyrics",
+"https://genius.com/Kelela-bank-head-extended-lyrics",
+"https://genius.com/Charli-xcx-track-10-lyrics",
+"https://genius.com/Destroyer-chinatown-lyrics"
+)
+
+song_urls_2000s <- c(
+"https://genius.com/Jamelia-superstar-lyrics",
+"https://genius.com/Spiller-groovejet-if-this-aint-love-lyrics",
+"https://genius.com/Kylie-minogue-spinning-around-lyrics",
+"https://genius.com/Eric-prydz-call-on-me-lyrics",
+"https://genius.com/Armand-van-helden-my-my-my-original-club-mix-lyrics",
+"https://genius.com/Melanie-c-i-turn-to-you-lyrics",
+"https://genius.com/Starsailor-four-to-the-floor-thin-white-duke-mix-lyrics",
+"https://genius.com/Kelis-milkshake-lyrics",
+"https://genius.com/Vitamin-c-graduation-friends-forever-lyrics",
+"https://genius.com/Alex-lloyd-amazing-lyrics",
+"https://genius.com/Kasey-chambers-not-pretty-enough-lyrics",
+"https://genius.com/Stacie-orrico-stuck-lyrics",
+"https://genius.com/Amanda-perez-angel-lyrics",
+"https://genius.com/Craig-david-walking-away-lyrics",
+"https://genius.com/Garbage-cherry-lips-go-baby-go-lyrics",
+"https://genius.com/Kt-tunstall-suddenly-i-see-lyrics",
+"https://genius.com/Geri-halliwell-its-raining-men-lyrics",
+"https://genius.com/Kevin-lyttle-turn-me-on-lyrics",
+"https://genius.com/Eskimo-joe-black-fingernails-red-wine-lyrics",
+"https://genius.com/Nickelback-how-you-remind-me-lyrics",
+"https://genius.com/Thirty-seconds-to-mars-the-kill-rebirth-lyrics",
+"https://genius.com/Simple-plan-welcome-to-my-life-lyrics",
+"https://genius.com/Youth-group-forever-young-lyrics",
+"https://genius.com/The-cat-empire-hello-lyrics",
+"https://genius.com/Slinkee-minx-summer-rain-lyrics",
+"https://genius.com/Bob-sinclar-love-generation-lyrics",
+"https://genius.com/Moby-we-are-all-made-of-stars-lyrics",
+"https://genius.com/Jewel-intuition-lyrics",
+"https://genius.com/Amiel-lovesong-radio-edit-lyrics",
+"https://genius.com/Michael-buble-home-lyrics",
+"https://genius.com/Evermore-light-surrounding-you-lyrics",
+"https://genius.com/Nerd-she-wants-to-move-native-tongues-remix-lyrics",
+"https://genius.com/Gym-class-heroes-clothes-off-lyrics",
+"https://genius.com/Basement-jaxx-good-luck-lyrics",
+"https://genius.com/Dht-listen-to-your-heart-furious-f-ez-radio-edit-lyrics",
+"https://genius.com/Scooter-the-logical-song-lyrics",
+"https://genius.com/Infernal-from-paris-to-berlin-lyrics",
+"https://genius.com/Flo-rida-low-lyrics",
+"https://genius.com/Estelle-american-boy-lyrics",
+"https://genius.com/Sean-paul-temperature-lyrics",
+"https://genius.com/Katy-perry-i-kissed-a-girl-lyrics",
+"https://genius.com/Lily-allen-the-fear-lyrics",
+"https://genius.com/Gabriella-cilmi-sweet-about-me-lyrics",
+"https://genius.com/Coldplay-viva-la-vida-lyrics",
+"https://genius.com/Empire-of-the-sun-walking-on-a-dream-lyrics",
+"https://genius.com/Jason-mraz-im-yours-lyrics",
+"https://genius.com/Eric-hutchinson-rock-and-roll-lyrics",
+"https://genius.com/The-last-goodnight-pictures-of-you-lyrics",
+"https://genius.com/End-of-fashion-o-yeah-lyrics",
+"https://genius.com/3oh-3-donttrustme-lyrics",
+"https://genius.com/Panic-at-the-disco-i-write-sins-not-tragedies-lyrics",
+"https://genius.com/Operator-please-just-a-song-about-ping-pong-lyrics",
+"https://genius.com/The-veronicas-untouched-lyrics",
+"https://genius.com/Thirsty-merc-20-good-reasons-lyrics",
+"https://genius.com/Finger-eleven-paralyzer-lyrics")
+
+song_urls_90s <- c(
+"https://genius.com/Pavement-gold-soundz-lyrics",
+"https://genius.com/Pulp-common-people-lyrics",
+"https://genius.com/Dr-dre-nuthin-but-a-g-thang-lyrics",
+"https://genius.com/Radiohead-paranoid-android-lyrics",
+"https://genius.com/Wu-tang-clan-protect-ya-neck-lyrics",
+"https://genius.com/My-bloody-valentine-only-shallow-lyrics",
+"https://genius.com/Neutral-milk-hotel-holland-1945-lyrics",
+"https://genius.com/Aaliyah-are-you-that-somebody-lyrics",
+"https://genius.com/Beck-loser-lyrics",
+"https://genius.com/Weezer-say-it-aint-so-lyrics",
+"https://genius.com/Bjork-hyper-ballad-lyrics",
+"https://genius.com/Aphex-twin-windowlicker-lyrics",
+"https://genius.com/Nirvana-smells-like-teen-spirit-lyrics",
+"https://genius.com/The-notorious-big-juicy-lyrics",
+"https://genius.com/Depeche-mode-enjoy-the-silence-lyrics",
+"https://genius.com/Outkast-spottieottiedopaliscious-lyrics",
+"https://genius.com/Belle-and-sebastian-the-state-i-am-in-lyrics",
+"https://genius.com/Daft-punk-da-funk-lyrics",
+"https://genius.com/Mazzy-star-fade-into-you-lyrics",
+"https://genius.com/Dj-shadow-midnight-in-a-perfect-world-lyrics",
+"https://genius.com/Smashing-pumpkins-1979-lyrics",
+"https://genius.com/The-breeders-cannonball-lyrics",
+"https://genius.com/Spiritualized-ladies-and-gentlemen-we-are-floating-in-space-lyrics",
+"https://genius.com/Built-to-spill-car-lyrics",
+"https://genius.com/Mobb-deep-shook-ones-part-ii-lyrics",
+"https://genius.com/Blur-girls-and-boys-lyrics",
+"https://genius.com/Elliott-smith-needle-in-the-hay-lyrics",
+"https://genius.com/Nas-it-aint-hard-to-tell-lyrics",
+"https://genius.com/The-verve-bitter-sweet-symphony-lyrics",
+"https://genius.com/The-flaming-lips-race-for-the-prize-lyrics",
+"https://genius.com/Underworld-born-slippy-nuxx-lyrics",
+"https://genius.com/Bonnie-prince-billy-i-see-a-darkness-lyrics",
+"https://genius.com/Missy-elliott-the-rain-supa-dupa-fly-lyrics",
+"https://genius.com/New-order-regret-lyrics",
+"https://genius.com/Pete-rock-and-cl-smooth-they-reminisce-over-you-troy-lyrics",
+"https://genius.com/Guided-by-voices-game-of-pricks-lyrics",
+"https://genius.com/Sinead-oconnor-nothing-compares-2-u-lyrics",
+"https://genius.com/A-tribe-called-quest-check-the-rhime-lyrics",
+"https://genius.com/Beastie-boys-sabotage-lyrics",
+"https://genius.com/The-orb-little-fluffy-clouds-lyrics",
+"https://genius.com/The-pharcyde-passin-me-by-lyrics",
+"https://genius.com/Nine-inch-nails-closer-lyrics",
+"https://genius.com/The-chemical-brothers-setting-sun-lyrics",
+"https://genius.com/Massive-attack-unfinished-sympathy-lyrics",
+"https://genius.com/Geto-boys-mind-playing-tricks-on-me-lyrics",
+"https://genius.com/Stardust-music-sounds-better-with-you-lyrics",
+"https://genius.com/Pj-harvey-rid-of-me-lyrics",
+"https://genius.com/Foo-fighters-everlong-lyrics",
+"https://genius.com/Yo-la-tengo-autumn-sweater-lyrics",
+"https://genius.com/Oasis-live-forever-lyrics",
+"https://genius.com/Public-enemy-brothers-gonna-work-it-out-lyrics",
+"https://genius.com/The-stone-roses-i-wanna-be-adored-lyrics",
+"https://genius.com/De-la-soul-a-roller-skating-jam-named-saturdays-lyrics",
+"https://genius.com/Portishead-glory-box-lyrics",
+"https://genius.com/Ghostface-killah-daytona-500-lyrics",
+"https://genius.com/Godspeed-you-black-emperor-moya-lyrics",
+"https://genius.com/The-beta-band-dry-the-rain-lyrics",
+"https://genius.com/Fugazi-repeater-lyrics",
+"https://genius.com/Deee-lite-groove-is-in-the-heart-lyrics",
+"https://genius.com/Sonic-youth-100-lyrics",
+"https://genius.com/Pixies-alec-eiffel-lyrics",
+"https://genius.com/Jay-z-dead-presidents-ii-lyrics",
+"https://genius.com/Modest-mouse-trailer-trash-lyrics",
+"https://genius.com/Dismemberment-plan-the-city-lyrics",
+"https://genius.com/Mary-j-blige-real-love-lyrics",
+"https://genius.com/The-cardigans-lovefool-lyrics",
+"https://genius.com/Bikini-kill-rebel-girl-lyrics",
+"https://genius.com/Saint-etienne-avenue-lyrics")
+
+song_data <- data.frame(
+  url = c(song_urls_2010s, song_urls_2000s, song_urls_90s),
+  decade = c(
+    rep("2010s", length(song_urls_2010s)),
+    rep("2000s", length(song_urls_2000s)),
+    rep("90s", length(song_urls_90s))
+  ),
+  stringsAsFactors = FALSE
 )
 
 get_lyrics <- function(url) {
@@ -54,23 +272,27 @@ get_lyrics <- function(url) {
   })
 }
 
+
+
 lyrics_df <- data.frame(
-  url = song_urls,
-  lyrics = sapply(song_urls, get_lyrics),
+  url = song_data$url,
+  decade = song_data$decade,
+  lyrics = sapply(song_data$url, get_lyrics),
   stringsAsFactors = FALSE
 )
 
-lyrics_to_words <- function(song_name, lyrics_text) {
+lyrics_to_words <- function(song_name, lyrics_text, decade) {
   
   words <- lyrics_text %>%
     stringr::str_to_lower() %>%
-    stringr::str_replace_all("[^a-z0-9\\s']", " ") %>%  # remove punctuation
+    stringr::str_replace_all("[^a-z0-9\\s']", " ") %>%
     stringr::str_squish() %>%
     stringr::str_split("\\s+") %>%
     unlist()
   
   data.frame(
     song = song_name,
+    decade = decade,
     word = words,
     stringsAsFactors = FALSE
   )
@@ -81,7 +303,8 @@ word_df <- do.call(
   lapply(seq_len(nrow(lyrics_df)), function(i) {
     lyrics_to_words(
       song_name = lyrics_df$url[i],
-      lyrics_text = lyrics_df$lyrics[i]
+      lyrics_text = lyrics_df$lyrics[i],
+      decade = lyrics_df$decade[i]
     )
   })
 )
