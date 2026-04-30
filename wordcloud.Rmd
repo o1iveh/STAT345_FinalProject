@@ -6,11 +6,6 @@ output: html_document
 ---
 
 ```{r}
-install.packages(c("wordcloud", "RColorBrewer", "dplyr"))
-install.packages("tm")
-```
-
-```{r}
 library(wordcloud)
 library(RColorBrewer)
 library(dplyr)
@@ -30,13 +25,32 @@ word_counts_filtered <- word_counts %>% #filters out common words (the, a, etc.)
 
 set.seed(123)
 
-wordcloud(
-  words = word_counts_filtered$word,
-  freq = word_counts_filtered$n,
-  min.freq = 5,
-  max.words = 250,
-  random.order = FALSE,
-  rot.per = 0.35,
-  colors = brewer.pal(8, "Dark2")
-)
+decades <- unique(word_df$decade)
+
+for (dec in decades) {
+  
+  # Filter data for this decade
+  df_subset <- word_df %>%
+    filter(decade == dec)
+  
+  # Count words and filter
+  word_counts <- df_subset %>%
+    count(word, sort = TRUE) %>%
+    filter(n >= 5) %>%
+    filter(!word %in% stopwords("en"))
+  
+  # Create word cloud
+  wordcloud(
+    words = word_counts$word,
+    freq = word_counts$n,
+    min.freq = 5,
+    max.words = 200,
+    random.order = FALSE,
+    rot.per = 0.35,
+    colors = brewer.pal(8, "Dark2")
+  )
+  
+  # Add title
+  title(paste("Word Cloud -", dec))
+}
 ```
